@@ -1,0 +1,424 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Regression Cup Leaderboard</title>
+<meta name="description" content="Public leaderboard for the STAT 464/564 Regression Cup, Fall 2026.">
+<style>
+  /* Colors checked for WCAG 2.1 AA contrast in both themes. */
+  :root {
+    --bg: #F6F7FA; --panel: #FFFFFF; --ink: #1B1F2A; --muted: #4A5163; --line: #D5DAE5;
+    --brand: #1F4E9D; --brand-ink: #FFFFFF; --brand-soft: #E8EEF9; --gold: #8A6100;
+    --fixed: #F1F3F8; --focus: #1F4E9D; --code: #EEF1F6;
+    --s1: #0072B2; --s2: #C0471A; --s3: #00775A; --s4: #8E3B8E; --s5: #5B5B5B; --s6: #8A6100;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #12151C; --panel: #1B2029; --ink: #E8EBF2; --muted: #B3BACB; --line: #343B4A;
+      --brand: #8FB3F0; --brand-ink: #0D1420; --brand-soft: #1F2A3D; --gold: #E5C15C;
+      --fixed: #232A36; --focus: #8FB3F0; --code: #262D3A;
+      --s1: #56B4E9; --s2: #F08A5D; --s3: #3CC9A0; --s4: #D79BD7; --s5: #C4C4C4; --s6: #E5C15C;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #12151C; --panel: #1B2029; --ink: #E8EBF2; --muted: #B3BACB; --line: #343B4A;
+    --brand: #8FB3F0; --brand-ink: #0D1420; --brand-soft: #1F2A3D; --gold: #E5C15C;
+    --fixed: #232A36; --focus: #8FB3F0; --code: #262D3A;
+    --s1: #56B4E9; --s2: #F08A5D; --s3: #3CC9A0; --s4: #D79BD7; --s5: #C4C4C4; --s6: #E5C15C;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+         font: 16px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+  a { color: var(--brand); }
+  :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+  .skip { position: absolute; left: -999px; top: 0; background: var(--panel); padding: 0.5rem 1rem; }
+  .skip:focus { left: 1rem; z-index: 10; }
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+  header.band { background: var(--brand); color: var(--brand-ink); }
+  header.band .inner { max-width: 1040px; margin: 0 auto; padding: 1.6rem 16px 1.4rem; display: flex;
+                       gap: 1rem; align-items: center; }
+  header.band svg { flex: none; }
+  header.band h1 { margin: 0; font-size: clamp(1.6rem, 4vw, 2.3rem); letter-spacing: -0.01em; line-height: 1.15; }
+  header.band p { margin: 0.2rem 0 0; font-size: 0.98rem; opacity: 0.95; }
+
+  main { max-width: 1040px; margin: 0 auto; padding: 0 16px 3rem; }
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0.8rem;
+           margin: 1.2rem 0 0.4rem; }
+  .stat { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 0.7rem 0.9rem; }
+  .stat .k { font-size: 0.82rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+  .stat .v { font-size: 1.45rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+  section.card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+                 padding: 1rem 1.2rem 1.2rem; margin: 1.2rem 0; }
+  section.card h2 { margin: 0.2rem 0 0.6rem; font-size: 1.3rem; color: var(--brand); }
+  section.final { border: 3px solid var(--gold); }
+  section.final h2 { color: var(--gold); }
+  .note { color: var(--muted); font-size: 0.93rem; margin: 0.3rem 0 0.8rem; }
+
+  .table-wrap { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
+  caption { text-align: left; color: var(--muted); font-size: 0.9rem; padding-bottom: 0.4rem; }
+  th, td { padding: 0.5rem 0.6rem; border-bottom: 1px solid var(--line); text-align: right; white-space: nowrap; }
+  td.when { white-space: normal; min-width: 9em; text-align: left; font-size: 0.9em; }
+  th:first-child, td:first-child { text-align: center; }
+  .team { text-align: left !important; white-space: normal; font-weight: 600; }
+  thead th { font-size: 0.85rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.03em;
+             border-bottom: 2px solid var(--line); }
+  tr.fixed td, tr.fixed th { background: var(--fixed); font-style: italic; font-weight: 400; }
+  tr.lead th.team::after { content: " \1F3C6"; }
+  .se { color: var(--muted); font-size: 0.85em; }
+  .rank { font-weight: 700; }
+  .swatch { display: inline-block; width: 0.8em; height: 0.8em; border-radius: 2px; margin-right: 0.4em;
+            vertical-align: baseline; }
+
+  figure { margin: 0; }
+  figcaption { color: var(--muted); font-size: 0.9rem; margin-top: 0.4rem; }
+  #chart svg { width: 100%; height: auto; display: block; }
+
+  .reports { display: grid; gap: 0.8rem; }
+  article.report { border-left: 5px solid var(--brand); background: var(--brand-soft); border-radius: 6px;
+                   padding: 0.6rem 0.9rem; }
+  article.report h3 { margin: 0 0 0.2rem; font-size: 1.05rem; }
+  article.report .meta { font-size: 0.85rem; color: var(--muted); margin-bottom: 0.3rem; }
+  .rung { display: inline-block; font-size: 0.78rem; font-weight: 700; border: 1px solid currentColor;
+          border-radius: 999px; padding: 0 0.5em; margin-right: 0.4em; color: var(--brand); }
+
+  details summary { cursor: pointer; font-weight: 600; color: var(--brand); padding: 0.3rem 0; }
+  dl.howto { display: grid; grid-template-columns: max-content 1fr; gap: 0.3rem 1rem; margin: 0; }
+  dl.howto dt { font-weight: 700; }
+  dl.howto dd { margin: 0; }
+  code { background: var(--code); padding: 0 0.25em; border-radius: 4px; }
+  footer { color: var(--muted); font-size: 0.88rem; max-width: 1040px; margin: 0 auto; padding: 0 16px 2rem; }
+  .status { color: var(--muted); font-size: 0.9rem; }
+  @media (max-width: 560px) {
+    dl.howto { grid-template-columns: 1fr; }
+    dl.howto dd { margin-bottom: 0.4rem; }
+    th, td { padding: 0.45rem 0.4rem; }
+  }
+</style>
+</head>
+<body>
+<a class="skip" href="#standings">Skip to the standings</a>
+<header class="band">
+  <div class="inner">
+    <svg width="52" height="52" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+      <path d="M18 8h28v10c0 10-6 18-14 18S18 28 18 18z" fill="currentColor"/>
+      <path d="M18 12H9c0 9 4 14 11 15M46 12h9c0 9-4 14-11 15" fill="none" stroke="currentColor" stroke-width="4"/>
+      <rect x="28" y="36" width="8" height="10" fill="currentColor"/>
+      <rect x="19" y="46" width="26" height="8" rx="2" fill="currentColor"/>
+    </svg>
+    <div>
+      <h1>The Regression Cup</h1>
+      <p>STAT 464/564, Fall 2026 &middot; public leaderboard</p>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="stats" aria-label="Summary">
+    <div class="stat"><div class="k">Teams</div><div class="v" id="st-teams">&ndash;</div></div>
+    <div class="stat"><div class="k">Scored submissions</div><div class="v" id="st-subs">&ndash;</div></div>
+    <div class="stat"><div class="k">Best Cup score</div><div class="v" id="st-best">&ndash;</div></div>
+    <div class="stat"><div class="k">Until the deadline</div><div class="v" id="st-left">&ndash;</div></div>
+  </div>
+  <p class="status" id="status" role="status" aria-live="polite">Loading the leaderboard&hellip;</p>
+
+  <section class="card final" id="final" aria-labelledby="h-final" hidden>
+    <h2 id="h-final">Final standings: the private half</h2>
+    <p class="note">Each team's final entry (its last scored submission before Tue Dec 1, 12:00 pm Pacific),
+      scored on the <strong>private half</strong> of the test counties, which no one saw during the Cup.</p>
+    <div class="table-wrap" id="final-table" tabindex="0" role="region" aria-label="Final standings table (scrolls sideways on small screens)"></div>
+  </section>
+
+  <section class="card" id="standings" aria-labelledby="h-standings">
+    <h2 id="h-standings">Current standings</h2>
+    <p class="note">Each team's row is its <strong>most recent</strong> scored submission. Scores are on the
+      <strong>public half</strong> of the test counties, on the log scale; higher is better and 0 is the
+      constant-mean benchmark. The &plusmn; numbers are bootstrap standard errors: two teams within about
+      twice that of each other are statistically tied. Final standings use the private half and are revealed
+      at the Regression Bowl.</p>
+    <div class="table-wrap" id="standings-table" tabindex="0" role="region" aria-label="Current standings table (scrolls sideways on small screens)"></div>
+  </section>
+
+  <section class="card" aria-labelledby="h-chart">
+    <h2 id="h-chart">The race so far</h2>
+    <figure>
+      <div id="chart"></div>
+      <figcaption id="chart-cap">Cup score of every scored submission over time, one line per team. The
+        dashed lines mark the instructor reference and the benchmark (0). The same numbers are in the
+        submission history table below.</figcaption>
+    </figure>
+  </section>
+
+  <section class="card" aria-labelledby="h-reports">
+    <h2 id="h-reports">Scouting reports</h2>
+    <p class="note">Short hints, posted during the term. Each points to a diagnostic worth running, never to an answer.</p>
+    <div class="reports" id="reports"><p>No scouting reports yet.</p></div>
+  </section>
+
+  <section class="card" aria-labelledby="h-history">
+    <h2 id="h-history">Submission history</h2>
+    <details>
+      <summary>Show every scored submission</summary>
+      <div class="table-wrap" id="history-table" tabindex="0" role="region" aria-label="Submission history table (scrolls sideways on small screens)"></div>
+    </details>
+  </section>
+
+  <section class="card" aria-labelledby="h-howto">
+    <h2 id="h-howto">How to read this page</h2>
+    <dl class="howto">
+      <dt>Cup score</dt><dd>The average of point skill and interval skill. Ties are broken by interval skill.</dd>
+      <dt>Point skill</dt><dd>1 &minus; (your squared misses) / (the benchmark's), on the log scale: an out-of-sample <i>R</i>&sup2;.</dd>
+      <dt>Interval skill</dt><dd>1 &minus; (your interval scores) / (the benchmark's). You pay for width, and 20 times the miss when the truth lands outside.</dd>
+      <dt>Coverage</dt><dd>Share of public counties whose truth landed inside your 90% interval. Honest intervals land near 0.90.</dd>
+      <dt>Reference rows</dt><dd>The benchmark (constant mean) and an instructor reference built with tools from this course.</dd>
+    </dl>
+  </section>
+</main>
+
+<footer>
+  <p>The response in the Regression Cup is <strong>synthetic</strong>: it was simulated from a secret model, using
+    real county predictors from County Health Rankings &amp; Roadmaps. It is not real EV data.</p>
+</footer>
+
+<script>
+(function () {
+  "use strict";
+  // Deadline for scored submissions: Tue Dec 1, 2026, 12:00 pm Pacific (PST = UTC-8).
+  var DEADLINE = new Date("2026-12-01T20:00:00Z");
+  var OPEN = new Date("2026-10-12T07:00:00Z");
+  var SERIES = ["--s1", "--s2", "--s3", "--s4", "--s5", "--s6"];
+  var DASHES = ["", "6 4", "2 3", "10 4 2 4", "1 4", "12 6"];
+
+  function $(id) { return document.getElementById(id); }
+  function esc(s) { return String(s).replace(/[&<>"']/g, function (c) {
+    return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+  function num(x) { var v = parseFloat(x); return isFinite(v) ? v : null; }
+  function f3(x) { return x === null ? "" : x.toFixed(3); }
+  function withSe(x, se) { return f3(x) + (se === null ? "" : ' <span class="se">&plusmn;&nbsp;' + se.toFixed(3) + "</span>"); }
+  function cssVar(n) { return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+
+  // RFC 4180 CSV parser (handles quoted fields with commas, quotes, newlines).
+  function parseCSV(text) {
+    var rows = [], row = [], f = "", q = false, i, c;
+    text = text.replace(/^﻿/, "");
+    for (i = 0; i < text.length; i++) {
+      c = text[i];
+      if (q) {
+        if (c === '"') { if (text[i + 1] === '"') { f += '"'; i++; } else q = false; }
+        else f += c;
+      } else if (c === '"') q = true;
+      else if (c === ",") { row.push(f); f = ""; }
+      else if (c === "\n" || c === "\r") {
+        if (c === "\r" && text[i + 1] === "\n") i++;
+        row.push(f); f = ""; if (row.length > 1 || row[0] !== "") rows.push(row); row = [];
+      } else f += c;
+    }
+    if (f !== "" || row.length) { row.push(f); rows.push(row); }
+    var head = rows.shift() || [];
+    return rows.map(function (r) { var o = {}; head.forEach(function (h, j) { o[h] = r[j] === undefined ? "" : r[j]; }); return o; });
+  }
+
+  function prep(rows) {
+    return rows.map(function (r) {
+      return { entry: r.entry, team: r.team, submission: num(r.submission), submitted: r.submitted,
+        t: r.submitted_utc ? new Date(r.submitted_utc) : null,
+        point: num(r.point_skill), point_se: num(r.point_se), inter: num(r.interval_skill),
+        inter_se: num(r.interval_se), cup: num(r.cup_score), cup_se: num(r.cup_se), cov: num(r.coverage) };
+    });
+  }
+
+  function standings(all) {
+    var teams = all.filter(function (r) { return r.entry === "team"; });
+    var latest = {}, count = {};
+    teams.forEach(function (r) {
+      count[r.team] = (count[r.team] || 0) + 1;
+      if (!latest[r.team] || r.submission > latest[r.team].submission) latest[r.team] = r;
+    });
+    var rows = Object.keys(latest).map(function (k) { var r = latest[k]; r.n = count[k]; return r; });
+    rows = rows.concat(all.filter(function (r) { return r.entry !== "team"; }));
+    rows.sort(function (a, b) { return (b.cup - a.cup) || (b.inter - a.inter); });
+    var k = 0;
+    rows.forEach(function (r) { r.rank = r.entry === "team" ? ++k : null; });
+    return rows;
+  }
+
+  function teamOrder(all) {
+    var seen = [];
+    all.forEach(function (r) { if (r.entry === "team" && seen.indexOf(r.team) < 0) seen.push(r.team); });
+    return seen;
+  }
+
+  function renderStandings(rows, order) {
+    if (!rows.some(function (r) { return r.entry === "team"; })) {
+      $("standings-table").innerHTML = "<p>No team has submitted yet. The reference rows show what to aim for:</p>";
+    } else $("standings-table").innerHTML = "";
+    var h = '<table><caption>Current entries, public half (log scale)</caption><thead><tr>' +
+      '<th scope="col">Rank</th><th scope="col" class="team">Team</th><th scope="col">Cup score</th>' +
+      '<th scope="col">Point skill</th><th scope="col">Interval skill</th><th scope="col">Coverage</th>' +
+      '<th scope="col">Submissions</th><th scope="col">Last submitted</th></tr></thead><tbody>';
+    rows.forEach(function (r) {
+      var fixed = r.entry !== "team";
+      var sw = fixed ? "" : '<span class="swatch" aria-hidden="true" style="background:var(' +
+        SERIES[order.indexOf(r.team) % SERIES.length] + ')"></span>';
+      h += '<tr class="' + (fixed ? "fixed" : (r.rank === 1 ? "lead" : "")) + '">' +
+        '<td class="rank">' + (r.rank === null ? "" : r.rank) + "</td>" +
+        '<th scope="row" class="team">' + sw + esc(r.team) + (r.rank === 1 ? '<span class="sr-only"> (leader)</span>' : "") + "</th>" +
+        "<td><strong>" + f3(r.cup) + "</strong></td>" +
+        "<td>" + withSe(r.point, r.point_se) + "</td>" +
+        "<td>" + withSe(r.inter, r.inter_se) + "</td>" +
+        "<td>" + f3(r.cov) + "</td>" +
+        "<td>" + (fixed ? "" : r.n) + "</td>" +
+        "<td class=\"when\">" + (fixed ? "" : esc(r.submitted)) + "</td></tr>";
+    });
+    $("standings-table").innerHTML += h + "</tbody></table>";
+  }
+
+  function renderHistory(all) {
+    var teams = all.filter(function (r) { return r.entry === "team"; })
+      .sort(function (a, b) { return (b.t || 0) - (a.t || 0); });
+    if (!teams.length) { $("history-table").innerHTML = "<p>No submissions yet.</p>"; return; }
+    var h = '<table><caption>Every scored submission, newest first (public half)</caption><thead><tr>' +
+      '<th scope="col">#</th><th scope="col" class="team">Team</th><th scope="col">Submitted</th>' +
+      '<th scope="col">Cup score</th><th scope="col">Point skill</th><th scope="col">Interval skill</th>' +
+      '<th scope="col">Coverage</th></tr></thead><tbody>';
+    teams.forEach(function (r) {
+      h += "<tr><td>" + r.submission + '</td><th scope="row" class="team">' + esc(r.team) + "</th><td>" +
+        esc(r.submitted) + "</td><td>" + f3(r.cup) + "</td><td>" + f3(r.point) + "</td><td>" + f3(r.inter) +
+        "</td><td>" + f3(r.cov) + "</td></tr>";
+    });
+    $("history-table").innerHTML = h + "</tbody></table>";
+  }
+
+  function renderChart(all, order) {
+    var pts = all.filter(function (r) { return r.entry === "team" && r.t && r.cup !== null; });
+    var ref = all.filter(function (r) { return r.entry === "reference"; })[0];
+    var W = 900, H = 340, L = 56, R = 170, T = 18, B = 44;
+    var x0 = OPEN.getTime(), x1 = DEADLINE.getTime();
+    var ys = pts.map(function (r) { return r.cup; }).concat([0, ref ? ref.cup : 0.6]);
+    var y0 = Math.min(-0.05, Math.floor(Math.min.apply(null, ys) * 10) / 10);
+    var y1 = Math.max(0.7, Math.ceil(Math.max.apply(null, ys) * 10) / 10);
+    function X(t) { return L + (W - L - R) * (t - x0) / (x1 - x0); }
+    function Y(v) { return T + (H - T - B) * (y1 - v) / (y1 - y0); }
+    var ink = cssVar("--ink"), muted = cssVar("--muted"), line = cssVar("--line");
+    var s = '<svg viewBox="0 0 ' + W + " " + H + '" role="img" aria-labelledby="chart-cap" font-family="system-ui, sans-serif" font-size="13">';
+    for (var v = Math.ceil(y0 * 10) / 10; v <= y1 + 1e-9; v += 0.1) {
+      var yy = Y(v).toFixed(1);
+      s += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + yy + '" y2="' + yy + '" stroke="' + line + '"/>' +
+           '<text x="' + (L - 8) + '" y="' + yy + '" dy="4" text-anchor="end" fill="' + muted + '">' + v.toFixed(1) + "</text>";
+    }
+    var months = [["Oct 12", "2026-10-12T07:00:00Z"], ["Nov 1", "2026-11-01T07:00:00Z"], ["Nov 15", "2026-11-15T08:00:00Z"], ["Dec 1", "2026-12-01T08:00:00Z"]];
+    months.forEach(function (m) {
+      var xx = X(new Date(m[1]).getTime()).toFixed(1);
+      s += '<line x1="' + xx + '" x2="' + xx + '" y1="' + (H - B) + '" y2="' + (H - B + 5) + '" stroke="' + muted + '"/>' +
+           '<text x="' + xx + '" y="' + (H - B + 20) + '" text-anchor="middle" fill="' + muted + '">' + m[0] + "</text>";
+    });
+    s += '<text x="14" y="' + ((T + H - B) / 2) + '" transform="rotate(-90 14 ' + ((T + H - B) / 2) + ')" text-anchor="middle" fill="' + ink + '">Cup score (public half)</text>';
+    var labels = [];
+    function hline(v, label) {
+      var yy = Y(v).toFixed(1);
+      labels.push({ y: Y(v), team: label, col: ink, weight: 400 });
+      return '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + yy + '" y2="' + yy + '" stroke="' + ink + '" stroke-dasharray="5 5" stroke-width="1.5"/>';
+    }
+    s += hline(0, "Benchmark (0)");
+    if (ref) s += hline(ref.cup, "Instructor reference");
+    order.forEach(function (team, i) {
+      var p = pts.filter(function (r) { return r.team === team; }).sort(function (a, b) { return a.t - b.t; });
+      if (!p.length) return;
+      var col = cssVar(SERIES[i % SERIES.length]);
+      var d = p.map(function (r, j) { return (j ? "L" : "M") + X(r.t.getTime()).toFixed(1) + " " + Y(r.cup).toFixed(1); }).join(" ");
+      s += '<path d="' + d + '" fill="none" stroke="' + col + '" stroke-width="2.5" stroke-dasharray="' + DASHES[i % DASHES.length] + '"/>';
+      p.forEach(function (r) {
+        s += '<circle cx="' + X(r.t.getTime()).toFixed(1) + '" cy="' + Y(r.cup).toFixed(1) + '" r="4.5" fill="' + col + '" stroke="' + cssVar("--panel") + '" stroke-width="1.5"/>';
+      });
+      var last = p[p.length - 1];
+      labels.push({ y: Y(last.cup), team: team, col: col, weight: 700 });
+    });
+    // Team labels in the right margin, nudged apart so they never overlap.
+    labels.sort(function (a, b) { return a.y - b.y; });
+    var GAP = 16, k;
+    for (k = 1; k < labels.length; k++) if (labels[k].y - labels[k - 1].y < GAP) labels[k].y = labels[k - 1].y + GAP;
+    var over = labels.length ? labels[labels.length - 1].y - (H - 8) : 0;      // pushed off the bottom? shift all up
+    if (over > 0) labels.forEach(function (lb) { lb.y -= over; });
+    labels.forEach(function (lb) {
+      var name = lb.team.length > 20 ? lb.team.slice(0, 19) + "\u2026" : lb.team;
+      s += '<text x="' + (W - R + 8) + '" y="' + lb.y.toFixed(1) + '" dy="4" fill="' + lb.col + '" font-weight="' + lb.weight + '">' + esc(name) + "</text>";
+    });
+    if (!pts.length) s += '<text x="' + ((L + W - R) / 2) + '" y="' + ((T + H - B) / 2) + '" text-anchor="middle" fill="' + muted + '">No submissions yet</text>';
+    $("chart").innerHTML = s + "</svg>";
+  }
+
+  function renderStats(all, rows) {
+    var teams = rows.filter(function (r) { return r.entry === "team"; });
+    $("st-teams").textContent = teams.length;
+    $("st-subs").textContent = all.filter(function (r) { return r.entry === "team"; }).length;
+    $("st-best").textContent = teams.length ? f3(Math.max.apply(null, teams.map(function (r) { return r.cup; }))) : "–";
+    var ms = DEADLINE - new Date();
+    if (ms <= 0) $("st-left").textContent = "Closed";
+    else {
+      var d = Math.floor(ms / 864e5), h = Math.floor((ms % 864e5) / 36e5);
+      $("st-left").textContent = d > 0 ? d + " d " + h + " h" : h + " h " + Math.floor((ms % 36e5) / 6e4) + " m";
+    }
+  }
+
+  function renderReports(list) {
+    if (!list || !list.length) return;
+    list = list.slice().sort(function (a, b) { return String(b.date).localeCompare(String(a.date)); });
+    $("reports").innerHTML = list.map(function (r, i) {
+      return '<article class="report" aria-labelledby="rep-' + i + '"><h3 id="rep-' + i + '">' + esc(r.title) + "</h3>" +
+        '<div class="meta">' + (r.rung ? '<span class="rung">' + esc(r.rung) + " rung</span>" : "") + esc(r.date || "") + "</div>" +
+        (r.body || []).map(function (p) { return "<p>" + esc(p) + "</p>"; }).join("") + "</article>";
+    }).join("");
+  }
+
+  var bust = "?t=" + Date.now();   // GitHub Pages caches files for up to 10 minutes
+  var cache = { all: null };
+  function drawAll() {
+    if (!cache.all) return;
+    var order = teamOrder(cache.all), rows = standings(cache.all);
+    renderStats(cache.all, rows); renderStandings(rows, order); renderChart(cache.all, order); renderHistory(cache.all);
+  }
+  fetch("leaderboard.csv" + bust, { cache: "no-store" })
+    .then(function (r) { if (!r.ok) throw new Error(r.status); return r.text(); })
+    .then(function (txt) {
+      cache.all = prep(parseCSV(txt));
+      drawAll();
+      $("status").textContent = "Loaded " + new Date().toLocaleString("en-US", { timeZone: "America/Los_Angeles",
+        dateStyle: "medium", timeStyle: "short" }) + " Pacific. Reload to see new submissions.";
+    })
+    .catch(function () { $("status").textContent = "The leaderboard could not be loaded. Please reload the page."; });
+  function renderFinal(rows) {
+    rows = rows.filter(function (r) { return r.team; });
+    if (!rows.length) return;
+    var h = '<table><caption>Final entries, private half (log scale)</caption><thead><tr>' +
+      '<th scope="col">Rank</th><th scope="col" class="team">Team</th><th scope="col">Cup score</th>' +
+      '<th scope="col">Point skill</th><th scope="col">Interval skill</th><th scope="col">Coverage</th>' +
+      '<th scope="col">Submissions</th></tr></thead><tbody>';
+    rows.forEach(function (r) {
+      var rank = num(r.rank), fixed = rank === null;
+      h += '<tr class="' + (fixed ? "fixed" : (rank === 1 ? "lead" : "")) + '"><td class="rank">' + (fixed ? "" : rank) +
+        '</td><th scope="row" class="team">' + esc(r.team) + (rank === 1 ? '<span class="sr-only"> (Cup winner)</span>' : "") +
+        "</th><td><strong>" + f3(num(r.cup_score)) + "</strong></td><td>" + withSe(num(r.point_skill), num(r.point_se)) +
+        "</td><td>" + withSe(num(r.interval_skill), num(r.interval_se)) + "</td><td>" + f3(num(r.coverage)) +
+        "</td><td>" + (r.submissions || "") + "</td></tr>";
+    });
+    $("final-table").innerHTML = h + "</tbody></table>";
+    $("final").hidden = false;
+    $("h-standings").textContent = "Public leaderboard (as it stood at the deadline)";
+  }
+  fetch("final_standings.csv" + bust, { cache: "no-store" })
+    .then(function (r) { if (!r.ok) throw new Error(r.status); return r.text(); })
+    .then(function (t) { renderFinal(parseCSV(t)); }).catch(function () {});
+  fetch("scouting.json" + bust, { cache: "no-store" })
+    .then(function (r) { return r.ok ? r.json() : []; }).then(renderReports).catch(function () {});
+  if (window.matchMedia) {
+    var mq = window.matchMedia("(prefers-color-scheme: dark)");
+    if (mq.addEventListener) mq.addEventListener("change", function () { if (cache.all) renderChart(cache.all, teamOrder(cache.all)); });
+  }
+})();
+</script>
+</body>
+</html>
