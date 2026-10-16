@@ -1,3 +1,4 @@
 "entry","team","submission","submitted","submitted_utc","point_skill","point_se","interval_skill","interval_se","cup_score","cup_se","coverage"
+"team","We're Regressing!!",1,"Fri Oct 16, 2026 04:25 PM PDT","2026-10-16T23:25:28Z",0,0,0,0,0,0,0.928
 "benchmark","Benchmark (constant mean)",,"","",0,,0,,0,,0.928
 "reference","Instructor reference",,"","",0.702,0.032,0.477,0.032,0.59,0.031,0.919
