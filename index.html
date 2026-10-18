@@ -128,14 +128,16 @@
 
   <section class="card final" id="final" aria-labelledby="h-final" hidden>
     <h2 id="h-final">Final standings: the private half</h2>
-    <p class="note">Each team's final entry (its last scored submission before Tue Dec 1, 12:00 pm Pacific),
-      scored on the <strong>private half</strong> of the test counties, which no one saw during the Cup.</p>
+    <p class="note">Each team's final entry (its best public-half submission before Tue Dec 1, 12:00 pm Pacific,
+      the one shown in the standings), scored on the <strong>private half</strong> of the test counties, which no
+      one saw during the Cup.</p>
     <div class="table-wrap" id="final-table" tabindex="0" role="region" aria-label="Final standings table (scrolls sideways on small screens)"></div>
   </section>
 
   <section class="card" id="standings" aria-labelledby="h-standings">
     <h2 id="h-standings">Current standings</h2>
-    <p class="note">Each team's row is its <strong>most recent</strong> scored submission. Scores are on the
+    <p class="note">Each team's row is its <strong>best</strong> scored submission so far (highest Cup score on
+      the public half), and that is the entry that counts at the end. Scores are on the
       <strong>public half</strong> of the test counties, on the log scale; higher is better and 0 is the
       constant-mean benchmark. The &plusmn; numbers are bootstrap standard errors: two teams within about
       twice that of each other are statistically tied. Final standings use the private half and are revealed
@@ -233,16 +235,36 @@
 
   function standings(all) {
     var teams = all.filter(function (r) { return r.entry === "team"; });
-    var latest = {}, count = {};
+    // Each team's entry is its BEST scored submission on the public half: highest
+    // Cup score, then interval skill (as displayed, 3 decimals); the earlier one wins
+    // an exact tie. The same rule picks the final entry (instructor/final_scoring.R).
+    function better(a, b) {
+      if (f3(a.cup) !== f3(b.cup)) return a.cup > b.cup;
+      if (f3(a.inter) !== f3(b.inter)) return a.inter > b.inter;
+      return a.submission < b.submission;
+    }
+    var best = {}, count = {};
     teams.forEach(function (r) {
       count[r.team] = (count[r.team] || 0) + 1;
-      if (!latest[r.team] || r.submission > latest[r.team].submission) latest[r.team] = r;
+      if (!best[r.team] || better(r, best[r.team])) best[r.team] = r;
     });
-    var rows = Object.keys(latest).map(function (k) { var r = latest[k]; r.n = count[k]; return r; });
+    var rows = Object.keys(best).map(function (k) { var r = best[k]; r.n = count[k]; return r; });
     rows = rows.concat(all.filter(function (r) { return r.entry !== "team"; }));
     rows.sort(function (a, b) { return (b.cup - a.cup) || (b.inter - a.inter); });
-    var k = 0;
-    rows.forEach(function (r) { r.rank = r.entry === "team" ? ++k : null; });
+    // Teams with the same displayed Cup score and interval skill share a rank
+    // ("1, 1, 3"). The leader mark goes only to rank-1 teams that beat the benchmark.
+    var k = 0, prev = null;
+    rows.forEach(function (r) {
+      if (r.entry !== "team") { r.rank = null; r.lead = false; return; }
+      k++;
+      var tied = prev && f3(r.cup) === f3(prev.cup) && f3(r.inter) === f3(prev.inter);
+      r.rank = tied ? prev.rank : k;
+      prev = r;
+    });
+    rows.forEach(function (r) {
+      r.tied = r.rank !== null && rows.filter(function (o) { return o.rank === r.rank; }).length > 1;
+      r.lead = r.rank === 1 && r.cup > 0;
+    });
     return rows;
   }
 
@@ -256,22 +278,22 @@
     if (!rows.some(function (r) { return r.entry === "team"; })) {
       $("standings-table").innerHTML = "<p>No team has submitted yet. The reference rows show what to aim for:</p>";
     } else $("standings-table").innerHTML = "";
-    var h = '<table><caption>Current entries, public half (log scale)</caption><thead><tr>' +
+    var h = '<table><caption>Each team\'s best submission, public half (log scale)</caption><thead><tr>' +
       '<th scope="col">Rank</th><th scope="col" class="team">Team</th><th scope="col">Cup score</th>' +
       '<th scope="col">Point skill</th><th scope="col">Interval skill</th><th scope="col">Coverage</th>' +
-      '<th scope="col">Submissions</th><th scope="col">Last submitted</th></tr></thead><tbody>';
+      '<th scope="col">Best submission</th><th scope="col">Submitted</th></tr></thead><tbody>';
     rows.forEach(function (r) {
       var fixed = r.entry !== "team";
       var sw = fixed ? "" : '<span class="swatch" aria-hidden="true" style="background:var(' +
         SERIES[order.indexOf(r.team) % SERIES.length] + ')"></span>';
-      h += '<tr class="' + (fixed ? "fixed" : (r.rank === 1 ? "lead" : "")) + '">' +
-        '<td class="rank">' + (r.rank === null ? "" : r.rank) + "</td>" +
-        '<th scope="row" class="team">' + sw + esc(r.team) + (r.rank === 1 ? '<span class="sr-only"> (leader)</span>' : "") + "</th>" +
+      h += '<tr class="' + (fixed ? "fixed" : (r.lead ? "lead" : "")) + '">' +
+        '<td class="rank">' + (r.rank === null ? "" : r.rank + (r.tied ? " (tie)" : "")) + "</td>" +
+        '<th scope="row" class="team">' + sw + esc(r.team) + (r.lead ? '<span class="sr-only"> (leader)</span>' : "") + "</th>" +
         "<td><strong>" + f3(r.cup) + "</strong></td>" +
         "<td>" + withSe(r.point, r.point_se) + "</td>" +
         "<td>" + withSe(r.inter, r.inter_se) + "</td>" +
         "<td>" + f3(r.cov) + "</td>" +
-        "<td>" + (fixed ? "" : r.n) + "</td>" +
+        "<td>" + (fixed ? "" : "#" + r.submission + " of " + r.n) + "</td>" +
         "<td class=\"when\">" + (fixed ? "" : esc(r.submitted)) + "</td></tr>";
     });
     $("standings-table").innerHTML += h + "</tbody></table>";
