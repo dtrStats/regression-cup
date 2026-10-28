@@ -1,1 +1,11 @@
-[]
+[][
+    {
+        "date": "Wednesday Oct 28",
+        "rung": "Mean",
+        "title": "Scouting report 1: residuals against everything",
+        "body": [
+            "A residuals-vs-fitted plot can look fine while a residuals-vs-predictor plot does not. Plot your residuals against every column in the codebook, including the ones that are not in your model, and add a smooth curve (geom_smooth()).",
+            "A bend says the form of a predictor is wrong. A trend in a predictor you left out says it belongs in the model. A flat cloud says that column has nothing more to tell you."
+        ]
+    }
+]
