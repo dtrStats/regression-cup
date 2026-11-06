@@ -7,5 +7,14 @@
             "A residuals-vs-fitted plot can look fine while a residuals-vs-predictor plot does not. Plot your residuals against every column in the codebook, including the ones that are not in your model, and add a smooth curve (geom_smooth()).",
             "A bend says the form of a predictor is wrong. A trend in a predictor you left out says it belongs in the model. A flat cloud says that column has nothing more to tell you."
         ]
-    }
+    },
+    {
+        "date": "Wed Nov 4",
+        "rung": "Mean",
+        "title": "Scouting report 3: when a straight line is not enough",
+        "body": [
+            "If a residual plot from Report 2 bends, a spline in that predictor is one line of code: splines::ns(x, df = 3) inside lm(). It is still a linear model.",
+            "Before you keep it, ask whether the bend is real: compare the models with a nested F-test (anova(smaller, bigger)), and check that the training improvement survives on the leaderboard."
+  ]
+}
 ]
