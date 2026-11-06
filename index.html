@@ -388,7 +388,7 @@
 
   function renderReports(list) {
     if (!list || !list.length) return;
-    list = list.slice().sort(function (a, b) { return String(b.date).localeCompare(String(a.date)); });
+        list = list.slice().reverse();   // newest first: reports are appended to the end of scouting.json
     $("reports").innerHTML = list.map(function (r, i) {
       return '<article class="report" aria-labelledby="rep-' + i + '"><h3 id="rep-' + i + '">' + esc(r.title) + "</h3>" +
         '<div class="meta">' + (r.rung ? '<span class="rung">' + esc(r.rung) + " rung</span>" : "") + esc(r.date || "") + "</div>" +
