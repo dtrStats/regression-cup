@@ -15,6 +15,6 @@
         "body": [
             "If a residual plot from Report 2 bends, a spline in that predictor is one line of code: splines::ns(x, df = 3) inside lm(). It is still a linear model.",
             "Before you keep it, ask whether the bend is real: compare the models with a nested F-test (anova(smaller, bigger)), and check that the training improvement survives on the leaderboard."
-  ]
-}
+            ]
+        }
 ]
