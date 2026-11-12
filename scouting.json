@@ -17,5 +17,15 @@
       "If a residual plot from Report 1 bends, a spline in that predictor is one line of code: splines::ns(x, df = 3) inside lm(). It is still a linear model.",
       "Before you keep it, ask whether the bend is real: compare the models with a nested F-test (anova(smaller, bigger)), and check that the training improvement survives on the leaderboard."
     ]
-  }
+  },
+  {
+  "date": "Thu Nov 12",
+  "rung": "Spread",
+  "title": "Report 3: are your intervals the same width everywhere?",
+  "body": [
+    "Look at your intervals on the log scale. Are they all the same width? Should they be?",
+    "Plot the absolute residuals (or log squared residuals) against your fitted values and against every column in the codebook, including the ones that are not in your model. If the spread changes systematically, your intervals are too wide in some counties and too narrow in others, and the interval score charges you for both.",
+    "A quick check: compute your coverage separately for the counties below and above the median of whatever variable the spread tracks. Honest intervals cover about 90% in both groups."
+  ]
+}
 ]
